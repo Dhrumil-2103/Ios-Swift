@@ -1,0 +1,126 @@
+var phoneContacts = [PhoneContact]() // array of PhoneContact(It is model find it below)
+var filter: ContactsFilter = .none
+
+extension ContactsVC{
+    
+    class func getContacts(filter: ContactsFilter = .none) -> [CNContact] { //  ContactsFilter is Enum find it below
+        
+        let contactStore = CNContactStore()
+        let keysToFetch = [
+            CNContactFormatter.descriptorForRequiredKeys(for: .fullName),
+            CNContactPhoneNumbersKey,
+            CNContactEmailAddressesKey,
+            CNContactThumbnailImageDataKey] as [Any]
+        
+        var allContainers: [CNContainer] = []
+        do {
+            allContainers = try contactStore.containers(matching: nil)
+        } catch {
+            print("Error fetching containers")
+        }
+        
+        var results: [CNContact] = []
+        
+        for container in allContainers {
+            let fetchPredicate = CNContact.predicateForContactsInContainer(withIdentifier: container.identifier)
+            
+            do {
+                let containerResults = try contactStore.unifiedContacts(matching: fetchPredicate, keysToFetch: keysToFetch as! [CNKeyDescriptor])
+                results.append(contentsOf: containerResults)
+            } catch {
+                print("Error fetching containers")
+            }
+        }
+        return results
+    }
+    
+    func phoneNumberWithContryCode() -> [String] {
+        
+        let contacts = ContactsVC.getContacts() // here calling the getContacts methods
+        var arrPhoneNumbers = [String]()
+        for contact in contacts {
+            for ContctNumVar: CNLabeledValue in contact.phoneNumbers {
+                if let fulMobNumVar  = ContctNumVar.value as? CNPhoneNumber {
+                    //let countryCode = fulMobNumVar.value(forKey: "countryCode") get country code
+                    if let MccNamVar = fulMobNumVar.value(forKey: "digits") as? String {
+                        arrPhoneNumbers.append(MccNamVar)
+                    }
+                }
+            }
+        }
+        return arrPhoneNumbers // here array has all contact numbers.
+    }
+    
+    enum ContactsFilter {
+        case none
+        case mail
+        case message
+    }
+    
+    fileprivate func loadContacts(filter: ContactsFilter) {
+        phoneContacts.removeAll()
+        var allContacts = [PhoneContact]()
+        for contact in ContactsVC.getContacts(filter: filter) {
+            allContacts.append(PhoneContact(contact: contact))
+        }
+        
+        var filterdArray = [PhoneContact]()
+        if self.filter == .mail {
+            filterdArray = allContacts.filter({ $0.email.count > 0 }) // getting all email
+        } else if self.filter == .message {
+            filterdArray = allContacts.filter({ $0.phoneNumber.count > 0 })
+        } else {
+            filterdArray = allContacts
+        }
+        phoneContacts.append(contentsOf: filterdArray)
+        
+        for contact in phoneContacts {
+            print("Name -> \(contact.name ?? "")")
+            print("Email -> \(contact.email)")
+            print("Phone Number -> \(contact.phoneNumber)")
+        }
+        let arrayCode  = self.phoneNumberWithContryCode()
+        if arrayCode.count == 0{
+            self.show_settings_alert()
+        }
+        for codes in arrayCode {
+            print(codes)
+        }
+        DispatchQueue.main.async {
+            self.tableVwContacts.reloadData() // update your tableView having phoneContacts array
+        }
+    }
+    
+    func requestContactPermission() {
+        switch CNContactStore.authorizationStatus(for: .contacts) {
+        case .authorized:
+            // Permission is already granted
+            self.vwEnableContacts.isHidden = true
+            self.loadContacts(filter: self.filter)
+            
+        case .notDetermined:
+            // Request permission
+            if self.isClickEnable == true{
+                CNContactStore().requestAccess(for: .contacts) { (granted, error) in
+                    if granted {
+                        DispatchQueue.main.async {
+                            self.vwEnableContacts.isHidden = true
+                            self.loadContacts(filter: self.filter)
+                            print("Allow")
+                        }
+                    } else {
+                        // Handle denied permission
+                    }
+                }
+            }
+            
+            
+        case .denied:
+            self.show_settings_alert()
+        default:
+            // Handle other permission statuses
+            break
+        }
+    }
+    
+}
