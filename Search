@@ -1,0 +1,53 @@
+//View DidLoad
+self.txtSearch.addTarget(self, action: #selector(searchWorkersAsPerText(_ :)), for: .editingChanged)
+
+
+@objc func searchWorkersAsPerText(_ textfield:UITextField) {
+        self.arrSearchTalentList.removeAll()
+        if textfield.text?.count != 0 {
+            for dicData in self.arrTalentList {
+                let isMachingWorker : NSString = (dicData.fname)! as NSString
+                let isLastName : NSString = (dicData.lname)! as NSString
+                let range = isMachingWorker.lowercased.range(of: textfield.text!, options: NSString.CompareOptions.caseInsensitive, range: nil,   locale: nil)
+                let range2 = isLastName.lowercased.range(of: textfield.text!, options: NSString.CompareOptions.caseInsensitive, range: nil,   locale: nil)
+                if range != nil {
+                    arrSearchTalentList.append(dicData)
+                }else if range2 != nil {
+                    arrSearchTalentList.append(dicData)
+                }
+            }
+            self.isSearch = true
+        } else {
+            self.isSearch = false
+            self.arrSearchTalentList = self.arrTalentList
+        }
+        
+        self.tableVwProfileDetails.reloadData()
+    }
+
+
+// numberOfRowsInsection
+
+return self.isSearch ? self.arrSearchLanguage.count : self.arrLanguage.count
+
+//CellFor Row
+var data = self.arrLanguage[indexPath.row]
+
+
+       if self.isSearch {
+            data = arrSearchLanguage[indexPath.row]
+        }else{
+            data = arrLanguage[indexPath.row]
+        }
+
+
+
+
+
+
+
+================================================
+
+In Table View Search Method : ---------------
+
+
