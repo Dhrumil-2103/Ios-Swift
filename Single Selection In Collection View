@@ -1,0 +1,15 @@
+//  Single Select Like Radio Button
+var lastIndexActive:IndexPath = [1 ,0]
+
+cell.btnCell.addTargetClosure { sender in
+            if self.lastIndexActive != indexPath {
+                
+                let cell = collectionView.cellForItem(at: indexPath) as! MyPostedProjectCell
+                // Your Selection State
+
+
+                let cell1 = collectionView.cellForItem(at: self.lastIndexActive) as? MyPostedProjectCell
+                 self.lastIndexActive = indexPath
+                // Your Unselection State
+            }
+        }
