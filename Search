@@ -1,7 +1,6 @@
 //View DidLoad
 self.txtSearch.addTarget(self, action: #selector(searchWorkersAsPerText(_ :)), for: .editingChanged)
 
-
 @objc func searchWorkersAsPerText(_ textfield:UITextField) {
         self.arrSearchTalentList.removeAll()
         if textfield.text?.count != 0 {
@@ -50,4 +49,20 @@ var data = self.arrLanguage[indexPath.row]
 
 In Table View Search Method : ---------------
 
+ func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if self.txtBranch.text?.count ?? 0 <= 0{
+            return UITableView.automaticDimension
+        }
+        let dicData = self.branchListData[indexPath.row - 1]
+        let isMachingWorker : NSString = (dicData.Name!) as NSString
+        let range = isMachingWorker.lowercased.range(of: self.txtBranch.text!, options: NSString.CompareOptions.caseInsensitive, range: nil,   locale: nil)
+        if range != nil {
+            return UITableView.automaticDimension
+        }
+        return 0
+    }
 
+@objc func searchWorkersAsPerText(_ textfield:UITextField) {
+        
+        self.tableVwProfileDetails.reloadData()
+    }
