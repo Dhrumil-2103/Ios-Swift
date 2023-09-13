@@ -7,12 +7,13 @@ self.datepicker.datePickerMode = .date
 self.datepicker.preferredDatePickerStyle = .wheels 
 self.datepicker.addTarget(self, action: #selector(self.handleStartDatepicker(sender:)), for: .valueChanged)  
 self.txtDate.inputView = self.datepicker   
+self.txtField.delegate = self
 
 @objc func handleStartDatepicker(sender: UIDatePicker) {  
   self.txtDate.text = dateformatter.string(from: datepicker.date)    
 }
 
 func textFieldDidBeginEditing(_ textField: UITextField) {
-         self.txtDateOfReg.inputView = datepicker
-         self.txtDateOfReg.text = dateformatter.string(from: datepicker.date)
+         self.txtField.inputView = datepicker
+         self.txtField.text = dateformatter.string(from: datepicker.date)
  }
