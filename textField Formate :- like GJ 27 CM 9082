@@ -1,0 +1,62 @@
+func isFirstCharacterAlphabet(input: String) -> Bool {
+        guard let firstCharacter = input.first else {
+            return false // The input is empty, so it doesn't start with an alphabet character.
+        }
+        return firstCharacter.isLetter
+    }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        // Get the current text in the text field
+        
+        if textField == self.txtRegistrationNumber{
+            
+            if let currentText = textField.text {
+                // Check if the user is adding a character (not deleting)
+                if !string.isEmpty {
+                    
+                    if self.isFirstCharacterAlphabet(input: self.txtRegistrationNumber.text ?? ""){
+                        // Formate :- GJ 27 CM 9082
+                        // Determine the current text length
+                        let currentTextLength = currentText.count
+                        
+                        // Check if the current text length is within the desired format
+                        switch currentTextLength {
+                        case 2, 5, 8:
+                            // Add a space after this case
+                            textField.text = currentText + " " + string
+                            return false // Prevent the default text change
+                        default:
+                            break
+                        }
+                        
+                        // Limit the total length to 13 characters
+                        if currentTextLength >= 13 {
+                            return false // Prevent further input
+                        }
+                        
+                    } else{
+                        
+                        // Formate :- 21 CM 9082 AA
+                        // Determine the current text length
+                        
+                        let currentTextLength = currentText.count
+                        
+                        // Check if the current text length is within the desired format
+                        switch currentTextLength {
+                        case 2, 5, 10:
+                            // Add a space after this case
+                            textField.text = currentText + " " + string
+                            return false // Prevent the default text change
+                        default:
+                            break
+                        }
+                        
+                        if currentTextLength >= 13 {
+                            return false // Prevent further input
+                        }
+                    }
+                }
+            }
+        }
+        return true // Allow the default text change
+    }
