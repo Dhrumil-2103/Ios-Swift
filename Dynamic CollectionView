@@ -1,0 +1,9 @@
+//This Function is call in the viewDidiLoad
+
+func updateHeight(){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let height = self.collectionVw.collectionViewLayout.collectionViewContentSize.height
+            self.heightForCollection.constant = height
+            self.collectionVw.layoutIfNeeded()
+        }
+    }
