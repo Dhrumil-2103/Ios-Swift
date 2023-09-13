@@ -1,0 +1,16 @@
+var selectedIndex = -1
+
+//In TableView Method
+cell.btnCell.addTargetClosure { (sender) in
+    self.selectedIndex = indexPath.row
+    
+    self.tableVw.reloadData()
+}
+
+if indexPath.row == self.selectedIndex {
+    cell.btnTikProject.isSelected = true
+// Your Selection Code
+
+} else {
+//Your Unselection Code
+}
