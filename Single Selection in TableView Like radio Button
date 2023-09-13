@@ -1,3 +1,4 @@
+//  Single Select Like Radio Button
 var selectedIndex = -1
 
 //In TableView Method
