@@ -1,0 +1,95 @@
+// MARK: - UICollectionViewDropDelegate
+extension UploadCarPhotosVC: UICollectionViewDropDelegate {
+
+    func collectionView(_ collectionView: UICollectionView, canHandle session: UIDropSession) -> Bool {
+        
+        return true
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        if session.localDragSession != nil {
+            if (destinationIndexPath?.item ?? 0) % 2 == 0 {
+                return UICollectionViewDropProposal(operation: .forbidden, intent: .insertAtDestinationIndexPath)
+            } else {
+                return UICollectionViewDropProposal(operation: .move, intent: .insertIntoDestinationIndexPath)
+            }
+        }
+        return UICollectionViewDropProposal(operation: .forbidden)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
+        guard let destinationIndexPath = coordinator.destinationIndexPath else { return }
+
+        // Handle the drop here by updating your data source
+        // Swap the items in your data source based on sourceIndexPath and destinationIndexPath
+        let sourceIndex = coordinator.items[0].sourceIndexPath!.item
+        let destinationIndex = destinationIndexPath.item
+
+        // Ensure that the indices are valid
+        if sourceIndex < arrCarImg.count && destinationIndex < arrCarImg.count {
+            // Swap the items in your data source
+            let movedItem = self.arrCarImg[sourceIndex]
+            self.arrCarImg[sourceIndex] = self.arrCarImg[destinationIndex]
+            self.arrCarImg[destinationIndex] = movedItem
+
+            // Update the collection view immediately without animations
+            collectionView.reloadData()
+        }
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidEnter session: UIDropSession) {
+        // Update UI to indicate a potential drop, e.g., change background color
+        collectionView.backgroundColor = UIColor.white
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidExit session: UIDropSession) {
+        // Update UI to cancel the potential drop, e.g., revert background color
+        collectionView.backgroundColor = UIColor.white
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidEnd session: UIDropSession) {
+        // Clean up any UI changes from the drop session, e.g., revert background color
+        collectionView.backgroundColor = UIColor.white
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropPreviewParametersForItemAt indexPath: IndexPath) -> UIDragPreviewParameters? {
+        // Customize the appearance of the drop preview
+        return UIDragPreviewParameters()
+    }
+    
+}
+
+//// MARK: - UICollectionViewDragDelegate
+extension UploadCarPhotosVC: UICollectionViewDragDelegate {
+
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        if indexPath.item % 2 == 0 {
+            return [] // Empty array for the fixed cell
+        } else {
+            
+            let item = self.arrCarImg[indexPath.item]
+            
+            // Check if the item should not be draggable
+            if shouldPreventDragForItem(item) {
+                return [] // Return an empty array to prevent dragging
+            }
+            let draggableItem = self.arrCarImg[indexPath.item] // Assuming data is your data source array
+            let itemProvider = NSItemProvider(object: draggableItem as NSString) // You can replace NSString with your actual data type
+            
+            let dragItem = UIDragItem(itemProvider: itemProvider)
+            dragItem.localObject = draggableItem
+            
+            return [dragItem]
+        }
+        
+        
+    }
+    
+    func shouldPreventDragForItem(_ item: String) -> Bool {
+        // Implement your condition here
+        // Return true if the item should not be draggable
+        // Return false if the item should be draggable
+        // For example, you can compare the item to a list of items that should not be draggable
+        return nonDraggableItems.contains(item)
+    }
+}
