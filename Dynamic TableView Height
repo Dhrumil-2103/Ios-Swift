@@ -1,0 +1,16 @@
+//MARK: Outlet for table view height
+@IBOutlet weak var heightForTable: NSLayoutConstraint!
+
+//MARK: viewDidLoad
+self.tableVw.delegate = self
+self.tableVw.dataSource = self
+self.tableVw.reloadData()
+self.tableVw.addObserver(self, forKeyPath: "contentSize", options: [.new, .old, .prior], context: nil)
+
+
+@objc override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "contentSize" {
+             // content size changed
+            self.heightForTable.constant = self.tableVw.contentSize.height
+        }
+    }
