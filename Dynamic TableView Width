@@ -1,0 +1,30 @@
+//dynamic table view width regarding label in the cell
+
+//MARK Outlet for tableview width
+@IBOutlet weak var widthForOptionTable: NSLayoutConstraint!
+
+var arrOption = ["All","Pending","On Hold","Cancelled","Completed"]
+var arrWidth = [Double]()
+
+
+//MARK:  In the cellForRowAt
+
+cell.lblName.text = self.arrOption[indexPath.row]
+
+            var textSize = cell.lblName.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: cell.lblName.frame.size.height))
+            
+            self.arrWidth.append(textSize.width)
+            
+            if let greatestNumber = self.arrWidth.max() {
+                let width = view.frame.width - 100
+                if width < greatestNumber{
+                    self.widthForTable.constant = width
+                } else{
+                    // Manage your width
+                    self.widthForTable.constant = greatestNumber + 100  
+                    if self.widthForTable.constant > width{
+                        self.widthForTable.constant = view.frame.width - 100
+                    }
+                }
+            }
+
