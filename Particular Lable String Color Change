@@ -1,0 +1,12 @@
+let mainString = "We have improved some features to provide better Services and  Experience, Kindy update."
+        let stringColor = "Kindy update."
+        
+        let range = (mainString as NSString).range(of: stringColor)
+        let mainRange = (mainString as NSString).range(of: mainString)
+        
+        let mutableAttributedString = NSMutableAttributedString.init(string: mainString)
+        
+        mutableAttributedString.addAttribute(NSAttributedString.Key.foregroundColor, value: UIColor(named: "stringColor name ") ?? UIColor.red, range: mainRange)
+        mutableAttributedString.addAttribute(NSAttributedString.Key.foregroundColor, value: UIColor(named: "mainString color name ") ?? UIColor.red, range: range)
+        
+        self.lblMsg.attributedText = mutableAttributedString
