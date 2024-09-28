@@ -1,0 +1,178 @@
+// Using this api implement upload image, video and PDF 
+
+
+
+import Alamofire
+
+class APIService: NSObject {
+    public func makePostHeaderImageCall(url: String, parameters: [String: Any], isVideo: Bool = false, completionHandler: @escaping (AnyObject?, NSError?) -> ()) {
+
+        let token : String = UserDefaults.standard.value(forKey: "authorizeToken") as! String
+        let headers: HTTPHeaders = [
+            "Authorization": "Bearer \(token)"
+        ]
+        
+        DEBUGLOG("API Name :::::::::::::::::: \(url)")
+        DEBUGLOG("Parameters ::::::::::::::::::")
+        DEBUGLOG(parameters)
+        DEBUGLOG("::::::::::::::::::")
+        
+        AF.upload(multipartFormData: { multipartFormData in
+            for (key, value) in parameters {
+                if let image = value as? UIImage {
+                    if image != UIImage(){
+                        let timestamp = Date().currentTimeMillis()
+                        let strTimeStamp = String(describing: timestamp!)
+                        
+                        multipartFormData.append(image.jpegData(compressionQuality: 0.5)!, withName: key,fileName: "\(strTimeStamp).jpg", mimeType: "image/jpg")
+                        
+                    } else {
+                        
+                    }
+                } else if let image = value as? Data {
+                    if isVideo {
+                        let timestamp = Date().currentTimeMillis()
+                        let strTimeStamp = String(describing: timestamp)
+                        
+//                        multipartFormData.append(videoData, withName: "video", fileName: "\(strTimeStamp).mp4", mimeType: "video/mp4")
+                        multipartFormData.append(image, withName: key,fileName: "\(strTimeStamp).mp4", mimeType: "video/mp4")
+                    } else {
+                        let timestamp = Date().currentTimeMillis()
+                        let strTimeStamp = String(describing: timestamp!)
+                        
+                        multipartFormData.append(image, withName: key,fileName: "\(strTimeStamp).pdf", mimeType: "application/pdf")
+                    }
+                }
+                else {
+                    // obj is String
+                    multipartFormData.append((value as AnyObject).data(using: String.Encoding.utf8.rawValue)!, withName: key)
+                }
+            }
+        },
+                  to: url,
+                  method: HTTPMethod.post,
+                  headers: headers).responseData(queue: .main) { (response) in
+
+            switch response.result {
+                
+            case .success(_):
+                DEBUGLOG(response)
+                if let value = response.value {
+                    let statusCode = response.response?.statusCode
+                    if statusCode == 200 {
+                        let dictString = String(decoding: value, as: UTF8.self)
+                        DEBUGLOG(dictString)
+                        completionHandler(dictString as AnyObject, nil)
+                    } else{
+                        let error = NSError(domain: "com.eezytutorials.iosTuts", code: (response.response?.statusCode)!, userInfo: ["Error reason" : "Invalid Outut"])
+                        completionHandler(nil, error)
+                    }
+                }
+                
+            case .failure(_):
+                let error = NSError(domain: "com.eezytutorials.iosTuts", code: (response.response?.statusCode ?? 0), userInfo: ["Error reason" : "Invalid Outut"])
+                completionHandler(nil, error as NSError)
+            }
+        }
+    }
+}
+
+
+===============================================================================================================
+
+
+HOW To use this API 
+
+
+// IN SWIFT
+func updateCompany(){
+        if !checkInternet() {
+            let vc = NoInternet
+            vc?.retryButton = { status in
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3.0, execute: {
+                    self.updateCompany()
+                })
+            }
+            vc?.modalPresentationStyle = .overFullScreen
+            self.present(vc!, animated: true)
+            return
+        }
+        
+        var parameter : [String : AnyObject] = [String : AnyObject]()
+        parameter["CompanyId"] = "\(appDelegate.companyListData.CompanyId ?? 0)" as AnyObject
+        parameter["LogoPath"] = self.imgCompanyLogo.image
+        
+        self.showLoader()
+        APIService().makePostHeaderImageCall(url: "\(baseUrl + update_company_url)", parameters: parameter) { data, status in
+            self.dismissLoader()
+            
+            do {
+                
+                let jsonData = Data((data as? String ?? "").utf8)
+                let decoder = JSONDecoder()
+                
+                let companyDetailsModel : CompanyDetailsModel = try decoder.decode(CompanyDetailsModel.self, from: jsonData)
+                if companyDetailsModel.errors?.count ?? 0 == 0 {
+                    self.completionHandler?(companyDetailsModel.data ?? [CompanyDetailsData]())
+                    self.navigationController?.popViewController(animated: true)
+                } else {
+                    let error: [Errors] = companyDetailsModel.errors?.filter { $0.key == "Name" } ?? [Errors]()
+                    if error.count != 0 {
+                        self.txtCompanyName.errorSky(message: "\(error[0].message ?? "")")
+                    }
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+
+
+// IN SWIFTUI
+
+func updateProfile() {
+        if !checkInternet() {
+            withAnimation {
+                self.isNoInternetInUpdateProfile = true
+            }
+            return
+        }
+        
+        // Fetch user list when the view appears
+        var parameter : [String : AnyObject] = [String : AnyObject]()
+        
+        parameter["FirstName"] = "\(self.firstName)" as AnyObject
+        parameter["LastName"] = "\(self.lastName)" as AnyObject
+        if self.selectedImage != nil{
+            parameter["ProfileImg"] = self.selectedImage as AnyObject
+        }
+        
+        showLoader()
+        APIService().makePostHeaderImageCall(url: "\(baseUrl + update_user_profile_url)", parameters: parameter) { data, status in
+            dismissLoader()
+            
+            do {
+                
+                let jsonData = Data((data as? String ?? "").utf8)
+                let decoder = JSONDecoder()
+                
+                let data : UpdateUserProfileModel = try decoder.decode(UpdateUserProfileModel.self, from: jsonData)
+                
+                if data.data?.count ?? 0 > 0 {
+                    if self.isFromCompany {
+                        self.handleData?(data.data?[0].LogoPath ?? "")
+                    } else {
+                        self.userProfileData.FirstName = data.data?[0].FirstName ?? ""
+                        self.userProfileData.LastName = data.data?[0].LastName ?? ""
+                        self.userProfileData.LogoPath = data.data?[0].LogoPath ?? ""
+                    }
+                    self.presentationMode.wrappedValue.dismiss()
+                }
+                
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+        
+    }
+
