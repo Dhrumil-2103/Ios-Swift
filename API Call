@@ -1,0 +1,211 @@
+class APIService: NSObject {
+    
+    func getURLRequest(endPoint:String) -> URLRequest{
+        var request = URLRequest(url: URL(string: "\(baseUrl + endPoint)")!)
+        request.httpMethod = "POST"
+        
+        // HTTP Headers
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        if let token = UserDefaults.standard.value(forKey: "authorizeToken") as? String {
+            let token : String = UserDefaults.standard.value(forKey: "authorizeToken") as! String
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.addValue("\(token)", forHTTPHeaderField: "x-access-token")
+            request.addValue("\(token)", forHTTPHeaderField: "Api-Key")
+            request.addValue("en-US", forHTTPHeaderField: "Accept-Language")
+            print("URLRequest => \(baseUrl + endPoint)")
+            print("x-access-token => \(token)")
+        } else {
+            let token = "5FESTztYKjjfmZXnzc3NBWoFYFDCjApCkeo4uCdRyyWQQUHP1aKJCraEBvTK"
+            request.addValue("\(token)", forHTTPHeaderField: "Api-Key")
+            request.addValue("en-US", forHTTPHeaderField: "Accept-Language")
+        }
+        
+        return request
+    }
+    
+    // POST API
+    func PostAPI(parameter:[String:AnyObject], completion : @escaping (ModelName,Int,Bool) -> ()){
+        
+        var request = getURLRequest(endPoint: endpoint_url)
+        DEBUGAPI("URL => \(request.url?.absoluteString ?? "")")
+        DEBUGAPI("parameter => \(parameter)")
+        
+        guard let httpBody = try? JSONSerialization.data(withJSONObject: parameter, options: []) else {
+            return
+        }
+        request.httpBody = httpBody
+        let session = URLSession.shared
+        session.dataTask(with: request) { (data, response, error) in
+            if let data = data {
+                let httpResponse = response as? HTTPURLResponse
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data, options: [])
+                    DEBUGAPI(json)
+                    
+                    let jsonDecoder = JSONDecoder()
+                    let model = try jsonDecoder.decode(ModelName.self, from: data)
+                    completion(model,httpResponse?.statusCode ?? 0,true)
+                } catch {
+                    DEBUGAPI(error)
+                    completion(ModelName(),httpResponse?.statusCode ?? 0,false)
+                }
+            }
+        }.resume()
+    }
+
+    // GET API
+    func GetUserAPI(parameter:[String:AnyObject], completion : @escaping (ModelName,Int,Bool) -> ()){
+            
+            var request = getURLRequest(endPoint: template_variable_list_url)
+            request.httpMethod = "GET"
+            
+            DEBUGLOG("API Name :::::::::::::::::: \(request.url?.absoluteString ?? "")")
+            let session = URLSession.shared
+            session.dataTask(with: request) { (data, response, error) in
+                if let data = data {
+                    let httpResponse = response as? HTTPURLResponse
+                    do {
+                        let json = try JSONSerialization.jsonObject(with: data, options: [])
+                        DEBUGAPI(json)
+                        
+                        let jsonDecoder = JSONDecoder()
+                        let model = try jsonDecoder.decode(ModelName.self, from: data)
+                        completion(model,httpResponse?.statusCode ?? 0,true)
+                    } catch {
+                        DEBUGAPI(error)
+                        completion(ModelName(),httpResponse?.statusCode ?? 0,false)
+                    }
+                }
+            }.resume()
+        }
+
+    // PUT API
+    func PutUserAPI(parameter:[String:AnyObject], completion : @escaping (ModelName,Int,Bool) -> ()){
+            
+            var request = getURLRequest(endPoint: sdk_set_user_url)
+            request.httpMethod = "PUT"
+            
+            DEBUGLOG("URL => \(request.url?.absoluteString ?? "")")
+            DEBUGLOG("parameter => \(parameter)")
+            
+            guard let httpBody = try? JSONSerialization.data(withJSONObject: parameter, options: []) else {
+                return
+            }
+            request.httpBody = httpBody
+            let session = URLSession.shared
+            session.dataTask(with: request) { (data, response, error) in
+                if let data = data {
+                    let httpResponse = response as? HTTPURLResponse
+                    do {
+                        let json = try JSONSerialization.jsonObject(with: data, options: [])
+                        DEBUGLOG(json)
+                        
+                        let jsonDecoder = JSONDecoder()
+                        let model = try jsonDecoder.decode(CreateUserModel.self, from: data)
+                        completion(model,httpResponse?.statusCode ?? 0,true)
+                    } catch {
+                        DEBUGLOG(error)
+                        completion(ModelName(),httpResponse?.statusCode ?? 0,false)
+                    }
+                } else {
+                    /// Response Not Get
+                    completion(ModelName(), 101, false)
+                }
+            }.resume()
+        }
+
+    // DELETE API
+    func DeleteAPI(channel_id: String, completion : @escaping (ModelName,Int,Bool) -> ()){
+            var request = getURLRequest(endPoint: "\(exit_room_url)", isUpdateApn: true)
+            request.httpMethod = "DELETE"
+            
+            // JSON data
+            let parameters: [String: String] = ["channel_id": channel_id]
+            do {
+                request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
+            } catch {
+                print("Failed to encode parameters to JSON: \(error)")
+                return
+            }
+            
+            DEBUGLOG("API Name :::::::::::::::::: \(request.url?.absoluteString ?? "")")
+            let session = URLSession.shared
+            session.dataTask(with: request) { (data, response, error) in
+                if let data = data {
+                    let httpResponse = response as? HTTPURLResponse
+                    do {
+                        let json = try JSONSerialization.jsonObject(with: data, options: [])
+                        DEBUGLOG(json)
+                        let jsonDecoder = JSONDecoder()
+                        let model = try jsonDecoder.decode(ModelName.self, from: data)
+                        completion(model,httpResponse?.statusCode ?? 0,true)
+                    } catch {
+                        DEBUGLOG(error)
+                    }
+                }
+            }.resume()
+        }
+        
+}
+
+========================================================================================================================
+
+API Model Structure 
+
+
+import Foundation
+
+struct ModelName: Codable {
+
+  var success : Bool?   = nil
+  var data    : [ModelData]? = []
+
+  enum CodingKeys: String, CodingKey {
+
+    case success = "success"
+    case data    = "data"
+  
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+
+    success = try values.decodeIfPresent(Bool.self   , forKey: .success )
+    data    = try values.decodeIfPresent([ModelData].self , forKey: .data    )
+ 
+  }
+
+  init() {
+
+  }
+
+}
+
+struct ModelData: Codable {
+
+  var name   : String? = nil
+  var userId : String? = nil
+
+  enum CodingKeys: String, CodingKey {
+
+    case name   = "name"
+    case userId = "user_id"
+  
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+
+    name   = try values.decodeIfPresent(String.self , forKey: .name   )
+    userId = try values.decodeIfPresent(String.self , forKey: .userId )
+ 
+  }
+
+  init() {
+
+  }
+
+}
+
