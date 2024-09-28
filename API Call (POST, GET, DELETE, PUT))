@@ -209,3 +209,77 @@ struct ModelData: Codable {
 
 }
 
+
+=============================================================================================================================
+// How to use this API
+
+
+// IN SWIFT
+    func reportsList(){
+        if !checkInternet() {
+            let vc = NoInternet
+            vc?.retryButton = { status in
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3.0, execute: {
+                    self.reportsList()
+                })
+            }
+            vc?.modalPresentationStyle = .overFullScreen
+            self.present(vc!, animated: true)
+            return
+        }
+        
+        self.showLoader()
+        APIService().reportsListAPI() { data, statusCode, status in
+            DispatchQueue.main.async {
+                self.dismissLoader()
+                if statusCode == 200 {
+                    self.reportsListData = data.data ?? [ReportsListData]()
+                    self.tableVw.reloadData()
+                } else if statusCode == 400 {
+                    self.view.addToastInView(data.message ?? "", isMainView: true)
+                } else if statusCode == 401 { // unauthorized
+                    self.AuthenticationFailed()
+                } else if statusCode == 500 { // Internal Server error
+                    self.InternalServerError()
+                }
+            }
+        }
+    }
+
+
+
+// IN SWIFTUI
+
+func desktopToken() {
+        if !checkInternet() {
+            self.isNoInternetDesktopInToken = true
+            return
+        }
+        
+        // Fetch user list when the view appears
+        var parameter : [String : AnyObject] = [String : AnyObject]()
+        parameter["DeskToken"] = self.scannedCode as AnyObject
+        
+        showLoader()
+        APIService().DesktopTokenAPI(parameter: parameter) { data, statusCode, success in
+            DispatchQueue.main.async {
+//                dismissLoader()
+                if statusCode == 200 {
+//                    showLoader()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
+                        dismissLoader()
+                    })
+                    showSnackBar(with: data.message ?? "")
+                } else if statusCode == 400 {
+                    
+                } else if statusCode == 401 {
+                    self.isPresentingAuthenticationView = true
+                } else if statusCode == 500 {
+                    self.isInternalServerError = true
+                }
+            }
+        }
+    }
+
+
+
