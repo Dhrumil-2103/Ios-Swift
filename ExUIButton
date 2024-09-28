@@ -1,0 +1,121 @@
+// Without outlate access button tap events
+
+import UIKit
+
+//MARK :-  Custom Type
+typealias UIButtonTargetClosure = (UIButton) -> ()
+class ClosureWrapper: NSObject {
+    let closure: UIButtonTargetClosure
+    init(_ closure: @escaping UIButtonTargetClosure) {
+        self.closure = closure
+    }
+}
+
+extension UIButton{
+    private struct AssociatedKeys {
+        static var targetClosure = "targetClosure"
+    }
+    
+//    private var targetClosure: UIButtonTargetClosure? {
+     var targetClosure: UIButtonTargetClosure? {
+        get {
+            guard let closureWrapper = objc_getAssociatedObject(self, &AssociatedKeys.targetClosure) as? ClosureWrapper else { return nil }
+            return closureWrapper.closure
+        }
+        set(newValue) {
+            guard let newValue = newValue else { return }
+            objc_setAssociatedObject(self, &AssociatedKeys.targetClosure, ClosureWrapper(newValue), objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    func addTargetClosure(closure: @escaping UIButtonTargetClosure) {
+        targetClosure = closure
+        addTarget(self, action: #selector(UIButton.closureAction), for: .touchUpInside)
+    }
+    
+    @objc func closureAction() {
+        guard let targetClosure = targetClosure else { return }
+        targetClosure(self)
+    }
+    
+    func alignImageRight() {
+        if UIApplication.shared.userInterfaceLayoutDirection == .leftToRight {
+            semanticContentAttribute = .forceRightToLeft
+        }
+        else {
+            semanticContentAttribute = .forceLeftToRight
+        }
+    }
+
+    func setCorderRadius(borderColor: UIColor, borderWidth : CGFloat, radius : CGFloat) {
+        self.layer.cornerRadius = radius
+        self.layer.borderColor = borderColor.cgColor
+        self.layer.borderWidth = borderWidth
+        self.clipsToBounds = true
+    }
+    
+    func setupImages(leftHandImage : UIImage, rightHandImage : UIImage) {
+        
+        self.setImage(leftHandImage, for: .normal)
+        self.imageView?.contentMode = .scaleAspectFill
+        self.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: self.frame.width - (self.imageView?.frame.width)!)
+        
+        let rightImageView = UIImageView(image: rightHandImage)
+        rightImageView.tintColor = .clear
+        
+        let height = self.frame.height * 0.2
+        let width = height
+        let xPos = self.frame.width - width
+        let yPos = (self.frame.height - height) / 2
+        
+        rightImageView.frame = CGRect(x: xPos, y: yPos, width: width, height: height)
+        self.addSubview(rightImageView)
+    }
+    
+    
+//    func roundCorners(corners: UIRectCorner, radius: CGFloat) {
+//        let path = UIBezierPath(roundedRect: bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
+//        let mask = CAShapeLayer()
+//        mask.path = path.cgPath
+//        layer.mask = mask
+//    }
+}
+
+class RippleButton: UIButton {
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        addTarget(self, action: #selector(handleTap), for: .touchUpInside)
+        clipsToBounds = true
+        layer.cornerRadius = frame.size.height / 2
+    }
+
+    @objc private func handleTap() {
+        let rippleLayer = CALayer()
+        rippleLayer.backgroundColor = UIColor.white.cgColor
+        rippleLayer.frame = CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height)
+        rippleLayer.cornerRadius = frame.size.height / 2
+        layer.addSublayer(rippleLayer)
+
+        let animation = CABasicAnimation(keyPath: "transform.scale")
+        animation.duration = 0.3
+        animation.fromValue = 0
+        animation.toValue = 1
+        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+        rippleLayer.add(animation, forKey: "scale")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            rippleLayer.removeFromSuperlayer()
+        }
+    }
+}
+
+
+
+
+
+// How to use this extension 
+
+// self.btnOutlate.addTargetClosure { sender i
+//
+// }
