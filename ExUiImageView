@@ -1,0 +1,151 @@
+// How to Set Image link Getting in API 
+// Install pod 'SDWebImage' 
+
+import UIKit
+//import SwiftGifOrigin
+import SDWebImage
+
+
+
+extension UIImageView{
+
+    func setImage(url : String){
+        
+        self.contentMode = .scaleAspectFit
+        
+//        self.image = UIImage.gif(name: "imageLoader")
+        self.image = UIImage()
+        
+        let urlString1 = url.replacingOccurrences(of: "\\", with: "/")
+        let urlString2 = urlString1.replacingOccurrences(of: " ", with: "%20")
+        
+        
+        self.sd_setImage(with: URL(string: urlString2), placeholderImage: UIImage(), options: [SDWebImageOptions.refreshCached], completed: { (image, error, SDImageCacheTypeMemory, url) in
+            if error != nil{
+//                self.image =  UIImage()
+            }else{
+                self.image = image
+            }
+        })
+        self.clipsToBounds = true
+    }
+    
+    func setImageCenter(url : String, plceholderImage : UIImage){
+        self.contentMode = .scaleAspectFit
+        
+//        self.image = UIImage.gif(name: "imageLoader")
+        self.image = UIImage()
+        
+        let urlString1 = url.replacingOccurrences(of: "\\", with: "/")
+        let urlString2 = urlString1.replacingOccurrences(of: " ", with: "%20")
+        
+        
+        self.sd_setImage(with: URL(string: urlString2), placeholderImage: UIImage(), options: [SDWebImageOptions.refreshCached], completed: { (image, error, SDImageCacheTypeMemory, url) in
+            if error != nil{
+//                self.image =  UIImage()
+            }else{
+                self.image = image
+                self.contentMode = .center
+            }
+        })
+        self.clipsToBounds = true
+    }
+    
+    func setImageScaleAspectFill(url : String){
+        
+        
+        self.contentMode = .scaleAspectFit
+//        self.image = UIImage.gif(name: "imageLoader")
+        self.image = UIImage()
+        
+        let urlString1 = url.replacingOccurrences(of: "\\", with: "/")
+        let urlString2 = urlString1.replacingOccurrences(of: " ", with: "%20")
+        
+        
+        self.sd_setImage(with: URL(string: urlString2), placeholderImage: UIImage(named: "ic_yoffy_logo"), options: [SDWebImageOptions.refreshCached], completed: { (image, error, SDImageCacheTypeMemory, url) in
+            if error != nil{
+//                self.image =  UIImage()
+            }else{
+                self.image = image
+                self.contentMode = .scaleAspectFill
+            }
+        })
+        self.clipsToBounds = true
+    }
+    func setImageScaleToFill(url : String, plceholderImage : UIImage){
+        self.contentMode = .scaleAspectFit
+        
+//        self.image = UIImage.gif(name: "imageLoader")
+        self.image = UIImage()
+        
+        let urlString1 = url.replacingOccurrences(of: "\\", with: "/")
+        let urlString2 = urlString1.replacingOccurrences(of: " ", with: "%20")
+        
+        
+        self.sd_setImage(with: URL(string: urlString2), placeholderImage: UIImage(), options: [SDWebImageOptions.refreshCached], completed: { (image, error, SDImageCacheTypeMemory, url) in
+            if error != nil{
+//                self.image =  UIImage()
+            }else{
+                self.image = image
+                self.contentMode = .scaleToFill
+            }
+        })
+        self.clipsToBounds = true
+    }
+    
+    func setImageScaleToFit(url : String, plceholderImage : UIImage){
+        self.contentMode = .scaleAspectFit
+        
+//        self.image = UIImage.gif(name: "imageLoader")
+        self.image = UIImage()
+        
+        let urlString1 = url.replacingOccurrences(of: "\\", with: "/")
+        let urlString2 = urlString1.replacingOccurrences(of: " ", with: "%20")
+        
+        
+        self.sd_setImage(with: URL(string: urlString2), placeholderImage: UIImage(), options: [SDWebImageOptions.refreshCached], completed: { (image, error, SDImageCacheTypeMemory, url) in
+            if error != nil{
+//                self.image =  UIImage()
+            }else{
+                self.image = image
+                self.contentMode = .scaleAspectFit
+            }
+        })
+        self.clipsToBounds = true
+    }
+    
+}
+
+extension UIImage {
+    func rotate(byDegrees degrees: CGFloat) -> UIImage? {
+        guard let cgImage = self.cgImage else {
+            return nil
+        }
+        
+        let radians = degrees * .pi / 180.0
+        
+        let rotatedSize = CGRect(origin: .zero, size: size)
+            .applying(CGAffineTransform(rotationAngle: radians))
+            .integral.size
+        
+        UIGraphicsBeginImageContext(rotatedSize)
+        if let context = UIGraphicsGetCurrentContext() {
+            context.translateBy(x: rotatedSize.width / 2, y: rotatedSize.height / 2)
+            context.rotate(by: radians)
+            draw(in: CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height))
+            
+            let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            
+            return rotatedImage
+        }
+        
+        return nil
+    }
+}
+
+======================================================================================
+
+// How to use...
+
+ self.imgProfilePhoto.setImageScaleAspectFill(url: "\(baseUrlForImage)\(appDelegate.loginUserData?.LogoPath ?? "")")
