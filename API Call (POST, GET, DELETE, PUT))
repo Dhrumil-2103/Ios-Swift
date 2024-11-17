@@ -26,30 +26,37 @@ class APIService: NSObject {
     }
     
     // POST API
-    func PostAPI(parameter:[String:AnyObject], completion : @escaping (ModelName,Int,Bool) -> ()){
+    func postAPI<T: Decodable>(modelType: T.Type, endPoint: String, parameter: [String: AnyObject], completion: @escaping (T?, Int, Bool) -> Void) {
         
-        var request = getURLRequest(endPoint: endpoint_url)
-        DEBUGAPI("URL => \(request.url?.absoluteString ?? "")")
-        DEBUGAPI("parameter => \(parameter)")
+        var request = getURLRequest(endPoint: endPoint)
+        print("URL => \(request.url?.absoluteString ?? "")")
+        print("parameter => \(parameter)")
         
-        guard let httpBody = try? JSONSerialization.data(withJSONObject: parameter, options: []) else {
-            return
-        }
-        request.httpBody = httpBody
+        // Convert parameters dictionary to form-data string
+        let formDataString = parameter.map { "\($0.key)=\($0.value)" }
+            .joined(separator: "&")
+        request.httpBody = formDataString.data(using: .utf8)
+        
+//        guard let httpBody = try? JSONSerialization.data(withJSONObject: parameter, options: []) else {
+//            return
+//        }
+//        request.httpBody = httpBody
+//
         let session = URLSession.shared
         session.dataTask(with: request) { (data, response, error) in
+            DEBUGLOG(data)
             if let data = data {
                 let httpResponse = response as? HTTPURLResponse
                 do {
                     let json = try JSONSerialization.jsonObject(with: data, options: [])
-                    DEBUGAPI(json)
+                    print(json)
                     
                     let jsonDecoder = JSONDecoder()
-                    let model = try jsonDecoder.decode(ModelName.self, from: data)
+                    let model = try jsonDecoder.decode(modelType.self, from: data)
                     completion(model,httpResponse?.statusCode ?? 0,true)
                 } catch {
-                    DEBUGAPI(error)
-                    completion(ModelName(),httpResponse?.statusCode ?? 0,false)
+                    print(error)
+                    completion(modelType as? T,httpResponse?.statusCode ?? 0,false)
                 }
             }
         }.resume()
